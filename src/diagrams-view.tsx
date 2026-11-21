@@ -45,16 +45,16 @@ export default class DiagramsView extends ItemView {
             close()
         }
 
-        const handleSaveAndExit = async (msg: any) => {
+        const handleSave = async (msg: any) => {
+            console.info('[Diagrams.net] handleSave called')
             if (this.diagramExists) {
-                saveData(msg)
-                refreshMarkdownViews()
-                close()
+                await saveData(msg)
+                await refreshMarkdownViews()
             }
             else {
-                saveData(msg)
+                await saveData(msg)
                 insertDiagram()
-                close()
+                this.diagramExists = true;
             }
         }
 
@@ -62,22 +62,28 @@ export default class DiagramsView extends ItemView {
             this.workspace.detachLeavesOfType(DIAGRAM_VIEW_TYPE);
         }
 
-        const saveData = (msg: any) => {
+        const saveData = async (msg: any) => {
+            console.info('[Diagrams.net] saveData called')
             const svgData = msg.svgMsg.data
             const svgBuffer = Buffer.from(svgData.replace('data:image/svg+xml;base64,', ''), 'base64')
             if (this.diagramExists) {
                 const svgFile = this.vault.getAbstractFileByPath(this.svgPath)
                 const xmlFile = this.vault.getAbstractFileByPath(this.xmlPath)
                 if (!(svgFile instanceof TFile && xmlFile instanceof TFile)) {
-                    return
+                    throw new Error('Could not find the existing SVG and XML files for this diagram')
                 }
-                this.vault.modifyBinary(svgFile, svgBuffer)
-                this.vault.modify(xmlFile, msg.svgMsg.xml)
+                await Promise.all([
+                    this.vault.modifyBinary(svgFile, svgBuffer),
+                    this.vault.modify(xmlFile, msg.svgMsg.xml),
+                ])
             }
             else {
-                this.vault.createBinary(this.svgPath, svgBuffer)
-                this.vault.create(this.xmlPath, msg.svgMsg.xml)
+                await Promise.all([
+                    this.vault.createBinary(this.svgPath, svgBuffer),
+                    this.vault.create(this.xmlPath, msg.svgMsg.xml),
+                ])
             }
+            console.info('[Diagrams.net] saveData completed')
         }
 
         const refreshMarkdownViews = async () => {
@@ -100,7 +106,7 @@ export default class DiagramsView extends ItemView {
                 diagramExists={this.diagramExists}
                 vault={this.vault}
                 handleExit={handleExit}
-                handleSaveAndExit={handleSaveAndExit}
+                handleSave={handleSave}
             />,
             container
         );

@@ -10,13 +10,13 @@ export const DiagramsApp = (props: any) => {
         diagramExists,
         vault,
         handleExit,
-        handleSaveAndExit,
+        handleSave,
     } = props
 
     const [xmlData, setXmlData] = React.useState(null)
 
     const { startEditing } = useDiagramsNet(
-        handleSaveAndExit,
+        handleSave,
         handleExit,
         () => "",
         () => xmlData)

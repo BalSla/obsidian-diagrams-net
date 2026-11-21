@@ -30,12 +30,23 @@ function useDiagramsNet(onSaveCallback, onStopEditing, getName, getData) {
     // Save
     useEffect(() => {
         if (save1 && save2) {
-            onSaveCallback({ pngMsg: save1, svgMsg: save2 })
-            callStopEditing();
-            setSave1(null)
-            setSave2(null)
+            console.info('[Diagrams.net] Both exports received; calling save handler')
+            const save = async () => {
+                try {
+                    await onSaveCallback({ pngMsg: save1, svgMsg: save2 })
+                    console.info('[Diagrams.net] Save handler completed')
+                }
+                catch (error) {
+                    console.error('[Diagrams.net] Save handler failed', error)
+                }
+                finally {
+                    setSave1(null)
+                    setSave2(null)
+                }
+            }
+            save()
         }
-    }, [onSaveCallback, callStopEditing, save1, save2]);
+    }, [onSaveCallback, save1, save2]);
 
     /* ============== Transaction handlers ================== */
 
@@ -59,6 +70,7 @@ function useDiagramsNet(onSaveCallback, onStopEditing, getName, getData) {
             // skip any autosave.
         }
         else if (msg.event === 'save') {
+            console.info('[Diagrams.net] Save event received from editor')
             _postMessage({
                 action: 'export',
                 format: 'svg',
@@ -71,7 +83,7 @@ function useDiagramsNet(onSaveCallback, onStopEditing, getName, getData) {
                 format: 'png',
                 // xml: msg.xml,
                 embedImages: true,
-                exit: msg.exit,
+                exit: false,
             });
         }
         else if (msg.event === 'export') {
@@ -82,9 +94,11 @@ function useDiagramsNet(onSaveCallback, onStopEditing, getName, getData) {
 
             // callSave(msg)
             if (msg.format === "png") {
+                console.info('[Diagrams.net] PNG export received')
                 setSave1(msg)
             }
             else if (msg.format === "svg") {
+                console.info('[Diagrams.net] SVG export received')
                 setSave2(msg)
             }
 
@@ -108,9 +122,9 @@ function useDiagramsNet(onSaveCallback, onStopEditing, getName, getData) {
 
         _postMessage({
             action: 'load',
-            noSaveBtn: 1,
+            noSaveBtn: 0,
             autosave: 0,
-            saveAndExit: '1',
+            saveAndExit: '0',
             modified: 'unsavedChanges',
             xml: diagram,
             title: title,
