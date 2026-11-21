@@ -16,7 +16,7 @@ export default class DiagramsView extends ItemView {
     displayText: string;
 
     getDisplayText(): string {
-        return this.displayText ?? 'Diagram';
+        return this.displayText ?? (this.fileName ? `${this.fileName} - Diagram` : 'Diagram');
     }
 
     getViewType(): string {

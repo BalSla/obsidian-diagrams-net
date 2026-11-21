@@ -8,6 +8,7 @@ export default class DiagramsNet extends Plugin {
 	vault: Vault;
 	workspace: Workspace;
 	diagramsView: DiagramsView;
+	pendingViewOptions: { hostView: MarkdownView | null; fileInfo: any } | null = null;
 
 	async onload() {
 
@@ -18,16 +19,21 @@ export default class DiagramsNet extends Plugin {
 
 		this.registerView(
 			DIAGRAM_VIEW_TYPE,
-			(leaf: WorkspaceLeaf) => (
-				this.diagramsView = new DiagramsView(
-					leaf, null, {
-					path: this.activeLeafPath(this.workspace),
-					basename: this.activeLeafName(this.workspace),
-					svgPath: '',
-					xmlPath: '',
-					diagramExists: false,
-				})
-			)
+			(leaf: WorkspaceLeaf) => {
+				const options = this.pendingViewOptions;
+				this.pendingViewOptions = null;
+				return this.diagramsView = new DiagramsView(
+					leaf,
+					options?.hostView ?? null,
+					options?.fileInfo ?? {
+						path: this.activeLeafPath(this.workspace),
+						basename: this.activeLeafName(this.workspace),
+						svgPath: '',
+						xmlPath: '',
+						diagramExists: false,
+					}
+				);
+			}
 		);
 
 		this.addCommand({
@@ -130,13 +136,14 @@ export default class DiagramsNet extends Plugin {
 			return
 		}
 		const hostView = this.workspace.getActiveViewOfType(MarkdownView);
-
-		const leaf = this.app.workspace.splitActiveLeaf('horizontal')
-		// TODO: Replace splitActiveLeaf with getLeaf, when official version => 0.15.
-		// const leaf = this.app.workspace.getLeaf(true, 'horizontal')
-
-		const diagramView = new DiagramsView(leaf, hostView, fileInfo)
-		leaf.open(diagramView)
+		this.pendingViewOptions = { hostView, fileInfo };
+		const leaf = this.workspace.getLeaf(true);
+		try {
+			await leaf.setViewState({ type: DIAGRAM_VIEW_TYPE, active: true });
+		}
+		finally {
+			this.pendingViewOptions = null;
+		}
 	}
 
 	handleDeleteFile(file: TAbstractFile) {
