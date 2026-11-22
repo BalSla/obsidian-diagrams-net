@@ -8,7 +8,7 @@ Based on [obsidian-diagrams-net](https://github.com/jensmtg/obsidian-diagrams-ne
 
 Push a tag matching the version in `manifest.json` (for example `v1.1.0` or `1.1.0`), or run the **Create Release** workflow manually. Manual runs use `v` followed by the manifest version. The workflow builds the plugin and publishes `main.js`, `manifest.json`, and `LICENSE`; this plugin has no `styles.css`.
 
-To manage updates using the alternative plugin manager, add a plugin with repository URL `https://github.com/BalSla/obsidian-diagrams-net` and plugin folder `obsidian-diagrams-net`. The manager checks the latest published release and requires a manual plugin reload after an update.
+We recommend using the alternative plugin manager to install and manage updates for this plugin. Add a plugin with repository URL `https://github.com/BalSla/obsidian-diagrams-net` and plugin folder `obsidian-diagrams-net`. The manager checks the latest published release and requires a manual plugin reload after an update.
 
 > ## ⚠️ **Caveats**
 > As Obsidian itself has an API that is under development, so is this plugin. There are some things you should be aware of if you are using it:
