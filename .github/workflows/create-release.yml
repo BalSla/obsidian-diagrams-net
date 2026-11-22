@@ -1,0 +1,72 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Select release tag
+        id: release
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          VERSION=$(node -e 'const v = require("./manifest.json").version; if (!/^\d+\.\d+\.\d+$/.test(v)) throw new Error("Invalid manifest version"); process.stdout.write(v)')
+          TAG="v$VERSION"
+          if [ "$EVENT_NAME" = "push" ]; then
+            if [ "$REF_NAME" != "$TAG" ] && [ "$REF_NAME" != "$VERSION" ]; then
+              echo "Tag $REF_NAME does not match manifest version $VERSION" >&2
+              exit 1
+            fi
+            TAG="$REF_NAME"
+          fi
+          if git rev-parse --verify --quiet "refs/tags/$TAG" > /dev/null; then
+            if [ "$(git rev-parse "refs/tags/$TAG^{}")" != "$(git rev-parse HEAD)" ]; then
+              echo "Tag $TAG points to a different commit" >&2
+              exit 1
+            fi
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create release if needed
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          RELEASE_TAGS=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name')
+          if printf '%s\n' "$RELEASE_TAGS" | grep -Fxq -- "$TAG"; then
+            echo "Release $TAG already exists; skipping creation."
+          else
+            gh release create "$TAG" --target "$COMMIT" --title "$TAG" --notes "Release $TAG" main.js manifest.json
+          fi

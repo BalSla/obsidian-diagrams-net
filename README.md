@@ -7,6 +7,12 @@
 
 A plugin for [Obsidian](https://obsidian.md/) for inserting and editing [diagrams.net](https://diagrams.net/) (previously draw.io) diagrams. It differs from the [drawio-obsidian](https://github.com/zapthedingbat/drawio-obsidian) plugin in that it embeds the diagrams.net online editor, which requires an active internet connection, but enables the full feature set and all the shape libraries.
 
+## Releases and alternative plugin manager
+
+Push a tag matching the version in `manifest.json` (for example `v1.1.0` or `1.1.0`), or run the **Create Release** workflow manually. Manual runs use `v` followed by the manifest version. The workflow builds the plugin and publishes `main.js` and `manifest.json`; this plugin has no `styles.css`.
+
+To manage updates using the alternative plugin manager, add a plugin with repository URL `https://github.com/BalSla/obsidian-diagrams-net` and plugin folder `obsidian-diagrams-net`. The manager checks the latest published release and requires a manual plugin reload after an update.
+
 
 ![2022-06-23-obsidian-diagrams-net](https://user-images.githubusercontent.com/6455628/175336757-4a458fb8-7367-4305-8829-4e333982550e.gif)
 
