@@ -68,5 +68,5 @@ jobs:
           if printf '%s\n' "$RELEASE_TAGS" | grep -Fxq -- "$TAG"; then
             echo "Release $TAG already exists; skipping creation."
           else
-            gh release create "$TAG" --target "$COMMIT" --title "$TAG" --notes "Release $TAG" main.js manifest.json
+            gh release create "$TAG" --target "$COMMIT" --title "$TAG" --notes "Release $TAG" main.js manifest.json LICENSE
           fi
